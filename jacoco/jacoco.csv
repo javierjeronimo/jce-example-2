@@ -1,0 +1,3 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+exercise2,com.minsait.cybersec.learning.cryptojava.exercise2,Exercise2.MyDigestCalculator,9,29,0,0,1,9,1,3,1,3
+exercise2,com.minsait.cybersec.learning.cryptojava.exercise2,Exercise2,14,253,1,3,3,43,2,7,1,6

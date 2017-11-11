@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Exercise2.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">exercise2</a> &gt; <a href="index.source.html" class="el_package">com.minsait.cybersec.learning.cryptojava.exercise2</a> &gt; <span class="el_source">Exercise2.java</span></div><h1>Exercise2.java</h1><pre class="source lang-java linenums">package com.minsait.cybersec.learning.cryptojava.exercise2;
+
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.cert.X509v1CertificateBuilder;
+import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.*;
+import org.bouncycastle.operator.DigestCalculator;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+
+import javax.security.auth.x500.X500Principal;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigInteger;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509CRL;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+
+public class Exercise2 {
+
+    private static final int VALIDITY_PERIOD = 7 * 24 * 60 * 60 * 1000; // one week
+
+    private final String provider;
+    private final KeyPairGenerator kpGen;
+    private final String signatureAlgorithm;
+    private final JcaContentSignerBuilder contentSignerBuilder;
+    private final JcaX509CertificateConverter certificateConverter;
+    private final JcaX509CRLConverter crlConverter;
+    private final DigestCalculator digestCalculator;
+
+    /**
+     * @param keySize            2048
+     * @param provider           BC
+     * @param keyAlgorithm       RSA
+     * @param signatureAlgorithm SHA256WITHRSAENCRYPTION
+     * @param digestAlgorithm    SHA256
+     */
+<span class="fc" id="L43">    public Exercise2(final String provider, final String keyAlgorithm, Integer keySize, final String signatureAlgorithm, final String digestAlgorithm) throws Exception {</span>
+<span class="fc" id="L44">        this.provider = provider;</span>
+
+<span class="fc" id="L46">        this.kpGen = KeyPairGenerator.getInstance(keyAlgorithm, this.provider);</span>
+<span class="fc" id="L47">        this.kpGen.initialize(keySize, new SecureRandom());</span>
+
+<span class="fc" id="L49">        this.signatureAlgorithm = signatureAlgorithm;</span>
+<span class="fc" id="L50">        this.contentSignerBuilder = new JcaContentSignerBuilder(this.signatureAlgorithm);</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (&quot;SHA1&quot;.equals(digestAlgorithm)) {</span>
+<span class="fc" id="L53">            this.digestCalculator = new MyDigestCalculator(MessageDigest.getInstance(digestAlgorithm), &quot;1.3.14.3.2.26&quot;);</span>
+
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        } else if (&quot;SHA256&quot;.equals(digestAlgorithm)) {</span>
+<span class="fc" id="L56">            this.digestCalculator = new MyDigestCalculator(MessageDigest.getInstance(digestAlgorithm), &quot;2.16.840.1.101.3.4.2.1&quot;);</span>
+
+        } else {
+<span class="nc" id="L59">            throw new IllegalArgumentException(&quot;Invalid digestAlgorithm. Shall be one of: [\&quot;SHA1\&quot;, \&quot;SHA256\&quot;]&quot;);</span>
+        }
+
+<span class="fc" id="L62">        this.certificateConverter = new JcaX509CertificateConverter();</span>
+<span class="fc" id="L63">        this.crlConverter = new JcaX509CRLConverter();</span>
+<span class="fc" id="L64">    }</span>
+
+    public KeyStore createKeyStore() throws Exception {
+<span class="fc" id="L67">        KeyStore result = KeyStore.getInstance(&quot;JKS&quot;);</span>
+<span class="fc" id="L68">        result.load(null, null);</span>
+<span class="fc" id="L69">        return result;</span>
+    }
+
+    public void saveKeyStore(KeyStore keyStore) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+<span class="nc" id="L73">        keyStore.store(new FileOutputStream(&quot;mykeystore.jks&quot;), &quot;mypassword&quot;.toCharArray());</span>
+<span class="nc" id="L74">    }</span>
+
+    public KeyPair createKeyPair() {
+<span class="fc" id="L77">        return this.kpGen.generateKeyPair();</span>
+    }
+
+    public X509Certificate createV1Certificate(KeyPair keyPair) throws Exception {
+<span class="fc" id="L81">        X509v1CertificateBuilder certGen = new JcaX509v1CertificateBuilder(</span>
+                new X500Principal(&quot;CN=Test CA Certificate v1&quot;),    // issuer
+                BigInteger.ONE,  // serial
+<span class="fc" id="L84">                new Date(System.currentTimeMillis()),</span>
+<span class="fc" id="L85">                new Date(System.currentTimeMillis() + VALIDITY_PERIOD),</span>
+                new X500Principal(&quot;CN=Test CA Certificate v1&quot;),    // subject
+<span class="fc" id="L87">                keyPair.getPublic());</span>
+
+<span class="fc" id="L89">        return this.certificateConverter.getCertificate(</span>
+<span class="fc" id="L90">                certGen.build(contentSignerBuilder.build(keyPair.getPrivate()))</span>
+        );
+    }
+
+    public X509Certificate createV3Certificate(KeyPair keyPair) throws Exception {
+<span class="fc" id="L95">        X509v3CertificateBuilder certGen = new JcaX509v3CertificateBuilder(</span>
+                new X500Principal(&quot;CN=Test CA Certificate v3&quot;),    // issuer
+<span class="fc" id="L97">                BigInteger.ONE.add(BigInteger.valueOf(2)),  // serial</span>
+<span class="fc" id="L98">                new Date(System.currentTimeMillis()),</span>
+<span class="fc" id="L99">                new Date(System.currentTimeMillis() + VALIDITY_PERIOD),</span>
+                new X500Principal(&quot;CN=Test CA Certificate v3&quot;),    // subject
+<span class="fc" id="L101">                keyPair.getPublic());</span>
+
+<span class="fc" id="L103">        certGen.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));</span>
+<span class="fc" id="L104">        certGen.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment));</span>
+<span class="fc" id="L105">        certGen.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth));</span>
+<span class="fc" id="L106">        certGen.addExtension(Extension.subjectAlternativeName, false, new GeneralNames(new GeneralName(GeneralName.rfc822Name, &quot;testv3@test.test&quot;)));</span>
+
+<span class="fc" id="L108">        return this.certificateConverter.getCertificate(</span>
+<span class="fc" id="L109">                certGen.build(contentSignerBuilder.build(keyPair.getPrivate()))</span>
+        );
+    }
+
+    public X509CRL createX509CRL(X509Certificate certificate, PrivateKey key, BigInteger revokedSerial) throws Exception {
+
+<span class="fc" id="L115">        X509v2CRLBuilder crlBuilder = new JcaX509v2CRLBuilder(certificate, new Date(System.currentTimeMillis()));</span>
+
+<span class="fc" id="L117">        crlBuilder.setNextUpdate(new Date(System.currentTimeMillis() + 100000));</span>
+<span class="fc" id="L118">        crlBuilder.addCRLEntry(revokedSerial, new Date(System.currentTimeMillis()), CRLReason.privilegeWithdrawn);</span>
+
+<span class="fc" id="L120">        crlBuilder.addExtension(</span>
+                Extension.authorityKeyIdentifier,
+                false,
+<span class="fc" id="L123">                new JcaX509ExtensionUtils(this.digestCalculator).createAuthorityKeyIdentifier(certificate));</span>
+
+<span class="fc" id="L125">        crlBuilder.addExtension(</span>
+                Extension.cRLNumber,
+                false,
+<span class="fc" id="L128">                new CRLNumber(BigInteger.valueOf(1)));</span>
+
+<span class="fc" id="L130">        return this.crlConverter.getCRL(</span>
+<span class="fc" id="L131">                crlBuilder.build(this.contentSignerBuilder.build(key))</span>
+        );
+    }
+
+    private static class MyDigestCalculator
+            implements DigestCalculator {
+
+        private final String oid;
+<span class="fc" id="L139">        private ByteArrayOutputStream bOut = new ByteArrayOutputStream();</span>
+        private MessageDigest digest;
+
+<span class="fc" id="L142">        public MyDigestCalculator(MessageDigest digest, final String oid) {</span>
+<span class="fc" id="L143">            this.digest = digest;</span>
+<span class="fc" id="L144">            this.oid = oid;</span>
+<span class="fc" id="L145">        }</span>
+
+        public AlgorithmIdentifier getAlgorithmIdentifier() {
+<span class="nc" id="L148">            return new AlgorithmIdentifier(new ASN1ObjectIdentifier(this.oid));</span>
+        }
+
+        public OutputStream getOutputStream() {
+<span class="fc" id="L152">            return bOut;</span>
+        }
+
+        public byte[] getDigest() {
+<span class="fc" id="L156">            byte[] bytes = digest.digest(bOut.toByteArray());</span>
+<span class="fc" id="L157">            bOut.reset();</span>
+<span class="fc" id="L158">            return bytes;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.7.9.201702052155</span></div></body></html>
