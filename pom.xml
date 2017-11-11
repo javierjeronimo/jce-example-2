@@ -16,7 +16,9 @@
     </developers>
 
     <scm>
-        <url>https://github.com/javierjeronimo/jce-example-2.git</url>
+        <url>https://github.com/javierjeronimo/jce-example-2</url>
+        <connection>scm:git:git@github.com:javierjeronimo/jce-example-2.git</connection>
+        <developerConnection>scm:git:git@github.com:javierjeronimo/jce-example-2.git</developerConnection>
     </scm>
 
     <properties>
@@ -91,6 +93,28 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <!-- Deploy the web site -->
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>0.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <!-- select the Maven phase in which the plugin will be executed -->
+                        <phase>site</phase>
+                        <configuration>
+                            <server>github</server>
+                            <repositoryOwner>javierjeronimo</repositoryOwner>
+                            <repositoryName>jce-example-2</repositoryName>
+                            <message>Building site</message>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -143,4 +167,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>github</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+    </profiles>
 </project>
